@@ -1,0 +1,41 @@
+name: Doc-as-Code MkDocs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # clone the respository
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      # Python configuration
+      - name: Set up Python
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: '3.11'
+
+      # Intall dependencies and libraries
+      - name: Install dependencies
+        run: |
+          pip install mkdocs mkdocs-material
+
+      # Buld the site
+      - name: Build site
+        run: |
+          mkdocs build
+
+      # Upload the s3 files
+      - name: Deploy to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: 'us-east-1' # Cambia según tu región
+        run: |
+          aws s3 rm s3://doc-as-code-mkdocs --recursive
+          aws s3 cp ./site s3://doc-as-code-mkdocs --recursive
